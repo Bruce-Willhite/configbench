@@ -1,8 +1,10 @@
-
-import tkinter as tk
+import customtkinter as ctk
 from tkinter import filedialog, messagebox
 import re
 import os
+
+ctk.set_appearance_mode("dark")
+ctk.set_default_color_theme("blue")
 
 # --- Globals ---
 entries = {}
@@ -19,18 +21,17 @@ def get_templates():
     return files if files else ["No Templates Found"]
 
 # --- Load Template from Dropdown ---
-def load_template(*args):
+def load_template(filename):
     global current_template
 
-    filename = template_var.get()
     path = os.path.join(TEMPLATE_FOLDER, filename)
 
     if os.path.exists(path):
         with open(path, "r") as f:
             current_template = f.read()
 
-        template_text.delete("1.0", tk.END)
-        template_text.insert(tk.END, current_template)
+        template_text.delete("1.0", "end")
+        template_text.insert("end", current_template)
 
         scan_variables()
 
@@ -39,30 +40,26 @@ def scan_variables():
     global entries
     entries.clear()
 
-    # Clear UI
     for widget in variable_frame.winfo_children():
         widget.destroy()
 
-    template = template_text.get("1.0", tk.END)
+    template = template_text.get("1.0", "end")
 
-    # Supports letters, numbers, underscore, dash
     vars_found = sorted(set(re.findall(r"\$([a-zA-Z0-9_-]+)", template)))
 
     if not vars_found:
-        tk.Label(variable_frame, text="No variables found").pack()
+        ctk.CTkLabel(variable_frame, text="No variables found").pack()
         return
 
-    # Create scrollable inputs
     for var in vars_found:
-        row = tk.Frame(variable_frame)
+        row = ctk.CTkFrame(variable_frame)
         row.pack(fill="x", pady=2)
 
-        label = tk.Label(row, text=var, width=20, anchor="w")
-        label.pack(side="left")
+        label = ctk.CTkLabel(row, text=var, width=140, anchor="w")
+        label.pack(side="left", padx=4)
 
-        entry = tk.Entry(row)
-        entry.pack(side="left", fill="x", expand=True)
-
+        entry = ctk.CTkEntry(row)
+        entry.pack(side="left", fill="x", expand=True, padx=4)
         entry.bind("<KeyRelease>", update_preview)
 
         entries[var] = entry
@@ -80,7 +77,7 @@ def generate_config():
 
 # --- Build Output ---
 def build_output():
-    template = template_text.get("1.0", tk.END)
+    template = template_text.get("1.0", "end")
     output = template
 
     for var, entry in sorted(entries.items(), key=lambda x: len(x[0]), reverse=True):
@@ -92,88 +89,72 @@ def build_output():
 # --- Copy to Clipboard ---
 def copy_to_clipboard():
     root.clipboard_clear()
-    root.clipboard_append(preview_text.get("1.0", tk.END).strip())
+    root.clipboard_append(preview_text.get("1.0", "end").strip())
     messagebox.showinfo("Copied", "Config copied to clipboard!")
 
 # --- Live Preview ---
 def update_preview(event=None):
     preview = build_output()
-    preview_text.delete("1.0", tk.END)
-    preview_text.insert(tk.END, preview)
+    preview_text.delete("1.0", "end")
+    preview_text.insert("end", preview)
 
 # --- Load external template ---
 def load_external():
     path = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")])
     if path:
         with open(path, "r") as f:
-            template_text.delete("1.0", tk.END)
-            template_text.insert(tk.END, f.read())
+            template_text.delete("1.0", "end")
+            template_text.insert("end", f.read())
 
         scan_variables()
 
 # --- GUI ---
-root = tk.Tk()
+root = ctk.CTk()
 root.title("ConfigBench")
 root.geometry("1100x650")
 
 # Left panel
-left_frame = tk.Frame(root)
+left_frame = ctk.CTkFrame(root, width=220)
 left_frame.pack(side="left", fill="y", padx=10, pady=10)
+left_frame.pack_propagate(False)
 
-# Template selection
-tk.Label(left_frame, text="Template").pack(anchor="w")
+ctk.CTkLabel(left_frame, text="Template", anchor="w").pack(fill="x", padx=8, pady=(8, 2))
 
-template_var = tk.StringVar()
 templates = get_templates()
-template_dropdown = tk.OptionMenu(left_frame, template_var, *templates)
-template_dropdown.pack(fill="x")
+template_dropdown = ctk.CTkOptionMenu(left_frame, values=templates, command=load_template)
+template_dropdown.pack(fill="x", padx=8, pady=2)
 
-template_var.trace("w", load_template)
-template_var.set(templates[0])
+ctk.CTkButton(left_frame, text="Rescan Variables", command=scan_variables).pack(fill="x", padx=8, pady=2)
+ctk.CTkButton(left_frame, text="Load External Template", command=load_external).pack(fill="x", padx=8, pady=2)
+ctk.CTkButton(left_frame, text="Generate Config", command=generate_config).pack(fill="x", padx=8, pady=10)
 
-# Buttons
-tk.Button(left_frame, text="Rescan Variables", command=scan_variables).pack(fill="x", pady=2)
-tk.Button(left_frame, text="Load External Template", command=load_external).pack(fill="x", pady=2)
-tk.Button(left_frame, text="Generate Config", command=generate_config).pack(fill="x", pady=10)
+ctk.CTkLabel(left_frame, text="Variables", anchor="w").pack(fill="x", padx=8, pady=(4, 2))
 
-# Variables label
-tk.Label(left_frame, text="Variables").pack(anchor="w")
+variable_frame = ctk.CTkScrollableFrame(left_frame)
+variable_frame.pack(fill="both", expand=True, padx=8, pady=(0, 8))
 
-# Scrollable variable panel
-canvas = tk.Canvas(left_frame, height=400)
-scrollbar = tk.Scrollbar(left_frame, orient="vertical", command=canvas.yview)
-variable_frame = tk.Frame(canvas)
+# Center panel (template editor)
+center_frame = ctk.CTkFrame(root)
+center_frame.pack(side="left", fill="both", expand=True, padx=(0, 10), pady=10)
 
-variable_frame.bind(
-    "<Configure>",
-    lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-)
+ctk.CTkLabel(center_frame, text="Template Editor", anchor="w").pack(fill="x", padx=8, pady=(8, 2))
 
-canvas.create_window((0, 0), window=variable_frame, anchor="nw")
-canvas.configure(yscrollcommand=scrollbar.set)
+template_text = ctk.CTkTextbox(center_frame)
+template_text.pack(fill="both", expand=True, padx=8, pady=(0, 8))
 
-canvas.pack(side="left", fill="both", expand=True)
-canvas.bind("<MouseWheel>", lambda e: canvas.yview_scroll(-1 * (e.delta // 120), "units"))
-scrollbar.pack(side="right", fill="y")
+# Right panel (live preview)
+right_frame = ctk.CTkFrame(root)
+right_frame.pack(side="right", fill="both", expand=True, padx=(0, 10), pady=10)
 
-# Center panel (template)
-center_frame = tk.Frame(root)
-center_frame.pack(side="left", fill="both", expand=True, padx=10)
+ctk.CTkLabel(right_frame, text="Live Preview", anchor="w").pack(fill="x", padx=8, pady=(8, 2))
 
-tk.Label(center_frame, text="Template Editor").pack(anchor="w")
+preview_text = ctk.CTkTextbox(right_frame, text_color="#00ff88")
+preview_text.pack(fill="both", expand=True, padx=8, pady=(0, 4))
 
-template_text = tk.Text(center_frame)
-template_text.pack(fill="both", expand=True)
+ctk.CTkButton(right_frame, text="Copy to Clipboard", command=copy_to_clipboard).pack(fill="x", padx=8, pady=(0, 8))
 
-# Right panel (preview)
-right_frame = tk.Frame(root)
-right_frame.pack(side="right", fill="both", expand=True, padx=10)
-
-tk.Label(right_frame, text="Live Preview").pack(anchor="w")
-
-preview_text = tk.Text(right_frame, bg="#1e1e1e", fg="#00ff88")
-preview_text.pack(fill="both", expand=True)
-
-tk.Button(right_frame, text="Copy to Clipboard", command=copy_to_clipboard).pack(fill="x", pady=2)
+# Auto-load first template
+template_dropdown.set(templates[0])
+load_template(templates[0])
 
 root.mainloop()
