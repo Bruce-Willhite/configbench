@@ -117,7 +117,7 @@ root.minsize(600, 400)
 root.resizable(True, True)
 
 # Left panel
-left_frame = ctk.CTkFrame(root, width=320)
+left_frame = ctk.CTkFrame(root, width=360)
 left_frame.pack(side="left", fill="y", padx=10, pady=10)
 left_frame.pack_propagate(False)
 
@@ -132,7 +132,7 @@ for btn_text, btn_cmd in [
     ("Load External Template", load_external),
     ("Generate Config", generate_config),
 ]:
-    ctk.CTkButton(left_frame, text=btn_text, command=btn_cmd, height=38).pack(fill="x", padx=10, pady=4)
+    ctk.CTkButton(left_frame, text=btn_text, command=btn_cmd, height=40).pack(fill="x", padx=12, pady=5)
 
 ctk.CTkLabel(left_frame, text="Variables", anchor="w").pack(fill="x", padx=8, pady=(10, 2))
 
