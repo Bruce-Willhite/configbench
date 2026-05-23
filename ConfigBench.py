@@ -113,6 +113,8 @@ def load_external():
 root = ctk.CTk()
 root.title("ConfigBench")
 root.geometry("1100x650")
+root.minsize(600, 400)
+root.resizable(True, True)
 
 # Left panel
 left_frame = ctk.CTkFrame(root, width=220)
