@@ -1,0 +1,4 @@
+hostname $hostname
+
+ip address $default-gateway-ip $default-gateway-mask
+
