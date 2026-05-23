@@ -136,25 +136,20 @@ ctk.CTkLabel(left_frame, text="Variables", anchor="w").pack(fill="x", padx=8, pa
 variable_frame = ctk.CTkScrollableFrame(left_frame)
 variable_frame.pack(fill="both", expand=True, padx=8, pady=(0, 8))
 
-# Center panel (template editor)
-center_frame = ctk.CTkFrame(root)
-center_frame.pack(side="left", fill="both", expand=True, padx=(0, 10), pady=10)
+# Tabbed center area
+tab_view = ctk.CTkTabview(root)
+tab_view.pack(side="left", fill="both", expand=True, padx=(0, 10), pady=10)
 
-ctk.CTkLabel(center_frame, text="Template Editor", anchor="w").pack(fill="x", padx=8, pady=(8, 2))
+tab_view.add("Template Editor")
+tab_view.add("Live Preview")
 
-template_text = ctk.CTkTextbox(center_frame)
+template_text = ctk.CTkTextbox(tab_view.tab("Template Editor"))
 template_text.pack(fill="both", expand=True, padx=8, pady=(0, 8))
 
-# Right panel (live preview)
-right_frame = ctk.CTkFrame(root)
-right_frame.pack(side="right", fill="both", expand=True, padx=(0, 10), pady=10)
-
-ctk.CTkLabel(right_frame, text="Live Preview", anchor="w").pack(fill="x", padx=8, pady=(8, 2))
-
-preview_text = ctk.CTkTextbox(right_frame, text_color="#00ff88")
+preview_text = ctk.CTkTextbox(tab_view.tab("Live Preview"), text_color="#00ff88")
 preview_text.pack(fill="both", expand=True, padx=8, pady=(0, 4))
 
-ctk.CTkButton(right_frame, text="Copy to Clipboard", command=copy_to_clipboard).pack(fill="x", padx=8, pady=(0, 8))
+ctk.CTkButton(tab_view.tab("Live Preview"), text="Copy to Clipboard", command=copy_to_clipboard).pack(fill="x", padx=8, pady=(0, 8))
 
 # Auto-load first template
 template_dropdown.set(templates[0])
