@@ -117,7 +117,7 @@ root.minsize(600, 400)
 root.resizable(True, True)
 
 # Left panel
-left_frame = ctk.CTkFrame(root, width=220)
+left_frame = ctk.CTkFrame(root, width=280)
 left_frame.pack(side="left", fill="y", padx=10, pady=10)
 left_frame.pack_propagate(False)
 
@@ -125,13 +125,16 @@ ctk.CTkLabel(left_frame, text="Template", anchor="w").pack(fill="x", padx=8, pad
 
 templates = get_templates()
 template_dropdown = ctk.CTkOptionMenu(left_frame, values=templates, command=load_template)
-template_dropdown.pack(fill="x", padx=8, pady=2)
+template_dropdown.pack(fill="x", padx=8, pady=(2, 8))
 
-ctk.CTkButton(left_frame, text="Rescan Variables", command=scan_variables).pack(fill="x", padx=8, pady=2)
-ctk.CTkButton(left_frame, text="Load External Template", command=load_external).pack(fill="x", padx=8, pady=2)
-ctk.CTkButton(left_frame, text="Generate Config", command=generate_config).pack(fill="x", padx=8, pady=10)
+for btn_text, btn_cmd in [
+    ("Rescan Variables", scan_variables),
+    ("Load External Template", load_external),
+    ("Generate Config", generate_config),
+]:
+    ctk.CTkButton(left_frame, text=btn_text, command=btn_cmd, height=36).pack(fill="x", padx=8, pady=3)
 
-ctk.CTkLabel(left_frame, text="Variables", anchor="w").pack(fill="x", padx=8, pady=(4, 2))
+ctk.CTkLabel(left_frame, text="Variables", anchor="w").pack(fill="x", padx=8, pady=(10, 2))
 
 variable_frame = ctk.CTkScrollableFrame(left_frame)
 variable_frame.pack(fill="both", expand=True, padx=8, pady=(0, 8))
