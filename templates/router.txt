@@ -1,4 +1,42 @@
-hostname $hostname
+# MikroTik RouterOS General Config
+# Device: $hostname
 
-ip address $default-gateway-ip $default-gateway-mask
+/system identity
+set name=$hostname
 
+/ip address
+add address=$lan-ip/$lan-prefix interface=ether1 comment="LAN"
+add address=$wan-ip/$wan-prefix interface=ether2 comment="WAN"
+
+/ip route
+add dst-address=0.0.0.0/0 gateway=$wan-gateway comment="Default Route"
+
+/ip dns
+set servers=$dns-primary,$dns-secondary allow-remote-requests=yes
+
+/ip dhcp-server
+/ip pool
+add name=dhcp-pool ranges=$dhcp-pool-start-$dhcp-pool-end
+
+/ip dhcp-server network
+add address=$lan-ip/$lan-prefix gateway=$lan-ip dns-server=$lan-ip
+
+/ip firewall filter
+add chain=input action=accept connection-state=established,related comment="Accept established"
+add chain=input action=accept src-address=$lan-ip/$lan-prefix comment="Accept LAN"
+add chain=input action=drop in-interface=ether2 comment="Drop WAN input"
+add chain=forward action=accept connection-state=established,related
+add chain=forward action=accept src-address=$lan-ip/$lan-prefix out-interface=ether2 comment="LAN to WAN"
+add chain=forward action=drop comment="Drop all else"
+
+/ip firewall nat
+add chain=srcnat out-interface=ether2 action=masquerade comment="NAT Masquerade"
+
+/system ntp client
+set enabled=yes server-dns-names=$ntp-server
+
+/user
+set [find name=admin] password=$admin-password
+
+/system clock
+set time-zone-name=$timezone
