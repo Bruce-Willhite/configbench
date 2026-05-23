@@ -27,13 +27,15 @@ def load_template(filename):
     path = os.path.join(TEMPLATE_FOLDER, filename)
 
     if os.path.exists(path):
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             current_template = f.read()
 
         template_text.delete("1.0", "end")
         template_text.insert("end", current_template)
 
         scan_variables()
+    else:
+        messagebox.showwarning("Missing Template", f"Template file not found:\n{path}")
 
 # --- Scan Variables ---
 def scan_variables():
@@ -70,26 +72,25 @@ def generate_config():
 
     path = filedialog.asksaveasfilename(defaultextension=".txt")
     if path:
-        with open(path, "w") as f:
+        with open(path, "w", encoding="utf-8") as f:
             f.write(output)
 
         messagebox.showinfo("Success", "Config generated!")
 
 # --- Build Output ---
 def build_output():
-    template = template_text.get("1.0", "end")
-    output = template
+    output = template_text.get("1.0", "end").rstrip("\n")
 
-    for var, entry in sorted(entries.items(), key=lambda x: len(x[0]), reverse=True):
+    for var, entry in entries.items():
         value = entry.get()
-        output = output.replace(f"${var}", value)
+        output = re.sub(r'\$' + re.escape(var) + r'(?![a-zA-Z0-9_-])', value, output)
 
     return output
 
 # --- Copy to Clipboard ---
 def copy_to_clipboard():
     root.clipboard_clear()
-    root.clipboard_append(preview_text.get("1.0", "end").strip())
+    root.clipboard_append(build_output())
     messagebox.showinfo("Copied", "Config copied to clipboard!")
 
 # --- Live Preview ---
@@ -102,7 +103,7 @@ def update_preview(event=None):
 def load_external():
     path = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")])
     if path:
-        with open(path, "r") as f:
+        with open(path, "r", encoding="utf-8") as f:
             template_text.delete("1.0", "end")
             template_text.insert("end", f.read())
 
@@ -155,6 +156,7 @@ ctk.CTkButton(right_frame, text="Copy to Clipboard", command=copy_to_clipboard).
 
 # Auto-load first template
 template_dropdown.set(templates[0])
-load_template(templates[0])
+if templates[0] != "No Templates Found":
+    load_template(templates[0])
 
 root.mainloop()
