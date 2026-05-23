@@ -1,0 +1,29 @@
+{
+  "productName": "ConfigBench",
+  "version": "0.1.0",
+  "identifier": "com.configbench.app",
+  "build": {
+    "frontendDist": "../src"
+  },
+  "app": {
+    "withGlobalTauri": true,
+    "windows": [
+      {
+        "title": "ConfigBench",
+        "width": 1100,
+        "height": 650,
+        "minWidth": 600,
+        "minHeight": 400,
+        "resizable": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": []
+  }
+}

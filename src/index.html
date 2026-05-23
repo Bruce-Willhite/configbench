@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ConfigBench</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <div id="sidebar">
+      <div class="section-label">Template</div>
+      <select id="template-select"></select>
+
+      <div class="btn-group">
+        <button id="btn-rescan" class="btn">Rescan Variables</button>
+        <button id="btn-load-external" class="btn">Load External Template</button>
+        <button id="btn-generate" class="btn btn-primary">Generate Config</button>
+      </div>
+
+      <div class="section-label">Variables</div>
+      <div id="variables-panel"></div>
+    </div>
+
+    <div id="main-content">
+      <div id="tab-bar">
+        <button class="tab active" data-tab="editor">Template Editor</button>
+        <button class="tab" data-tab="preview">Live Preview</button>
+      </div>
+      <div id="tab-editor" class="tab-content active">
+        <textarea id="template-editor" spellcheck="false"></textarea>
+      </div>
+      <div id="tab-preview" class="tab-content">
+        <textarea id="preview-output" spellcheck="false" readonly></textarea>
+        <button id="btn-copy" class="btn btn-copy">Copy to Clipboard</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script src="main.js"></script>
+</body>
+</html>
