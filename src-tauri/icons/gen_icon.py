@@ -103,6 +103,6 @@ for dx in [1,2]:
 dot(30, 22+1, SHINE)                 # top-right
 dot(30, 22+3, SHINE)                 # bot-right
 
-out = r"C:\Users\Bruce\Desktop\Projects\ConfigBench\src-tauri\icons\icon_source.png"
+out = r"C:\Users\Bruce\Desktop\Projects\ConfigBench\src-tauri\icons\logo.png"
 img.save(out)
 print("Saved", out)
