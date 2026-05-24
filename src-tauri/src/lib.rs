@@ -2,6 +2,16 @@ use std::fs;
 use std::path::PathBuf;
 use tauri_plugin_dialog::FilePath;
 
+// ── Embedded templates (baked into the binary at compile time) ──
+const EMBEDDED: &[(&str, &str)] = &[
+    ("router.txt", include_str!("../../templates/router.txt")),
+];
+
+fn embedded_content(name: &str) -> Option<&'static str> {
+    EMBEDDED.iter().find(|(n, _)| *n == name).map(|(_, c)| *c)
+}
+
+// Optional on-disk folder for user-added templates (not required)
 fn template_dir() -> PathBuf {
     if cfg!(debug_assertions) {
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -18,27 +28,40 @@ fn template_dir() -> PathBuf {
 
 #[tauri::command]
 fn get_templates() -> Vec<String> {
+    // Start with the embedded templates
+    let mut names: Vec<String> = EMBEDDED.iter().map(|(n, _)| n.to_string()).collect();
+
+    // Merge in any .txt files from the on-disk folder (user additions)
     let dir = template_dir();
-    if !dir.exists() {
-        let _ = fs::create_dir_all(&dir);
+    if dir.exists() {
+        if let Ok(entries) = fs::read_dir(&dir) {
+            for entry in entries.filter_map(|e| e.ok()) {
+                if entry.path().extension().map(|x| x == "txt").unwrap_or(false) {
+                    if let Ok(fname) = entry.file_name().into_string() {
+                        if !names.contains(&fname) {
+                            names.push(fname);
+                        }
+                    }
+                }
+            }
+        }
     }
-    let mut templates: Vec<String> = fs::read_dir(&dir)
-        .map(|entries| {
-            entries
-                .filter_map(|e| e.ok())
-                .filter(|e| e.path().extension().map(|x| x == "txt").unwrap_or(false))
-                .filter_map(|e| e.file_name().into_string().ok())
-                .collect()
-        })
-        .unwrap_or_default();
-    templates.sort();
-    templates
+
+    names.sort();
+    names
 }
 
 #[tauri::command]
 fn load_template(name: String) -> Result<String, String> {
+    // Prefer on-disk version (allows user to override embedded templates)
     let path = template_dir().join(&name);
-    fs::read_to_string(&path).map_err(|e| e.to_string())
+    if path.exists() {
+        return fs::read_to_string(&path).map_err(|e| e.to_string());
+    }
+    // Fall back to embedded
+    embedded_content(&name)
+        .map(|s| s.to_string())
+        .ok_or_else(|| format!("Template '{}' not found", name))
 }
 
 #[tauri::command]

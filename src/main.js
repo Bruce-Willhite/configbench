@@ -1,6 +1,23 @@
 const { invoke } = window.__TAURI__.core;
 
 let currentVariables = {};
+let currentTemplate = '';
+
+// ── Persist / restore variable values per template ──
+function saveValues() {
+  if (!currentTemplate) return;
+  const values = {};
+  for (const [name, input] of Object.entries(currentVariables)) {
+    values[name] = input.value;
+  }
+  localStorage.setItem('cb_vals_' + currentTemplate, JSON.stringify(values));
+}
+
+function savedValues() {
+  if (!currentTemplate) return {};
+  try { return JSON.parse(localStorage.getItem('cb_vals_' + currentTemplate) || '{}'); }
+  catch { return {}; }
+}
 
 // ── Toast ──
 let toastTimer = null;
@@ -35,6 +52,7 @@ function scanVariables() {
   for (const [name, input] of Object.entries(currentVariables)) {
     oldValues[name] = input.value;
   }
+  const persisted = savedValues();
 
   const panel = document.getElementById('variables-panel');
   panel.innerHTML = '';
@@ -58,8 +76,8 @@ function scanVariables() {
     input.type = 'text';
     input.className = 'var-input';
     input.placeholder = name;
-    input.value = oldValues[name] || '';
-    input.addEventListener('input', updatePreview);
+    input.value = oldValues[name] ?? persisted[name] ?? '';
+    input.addEventListener('input', () => { saveValues(); updatePreview(); });
 
     row.appendChild(label);
     row.appendChild(input);
@@ -102,6 +120,7 @@ async function loadTemplates() {
 async function loadTemplate(name) {
   try {
     const content = await invoke('load_template', { name });
+    currentTemplate = name;
     document.getElementById('template-editor').value = content;
     scanVariables();
   } catch (e) {
@@ -132,6 +151,7 @@ document.getElementById('btn-rescan').addEventListener('click', scanVariables);
 document.getElementById('btn-load-external').addEventListener('click', async () => {
   const result = await invoke('load_external_dialog');
   if (result) {
+    currentTemplate = result.filename;
     document.getElementById('template-editor').value = result.content;
     scanVariables();
     toast('Template loaded');
